@@ -10,6 +10,10 @@ async function main () {
   const ParentProvider = new Web3(new Web3.providers.WebsocketProvider(parent));
   const OverlayToken = await new ParentProvider.eth.Contract(overlayTokenABI, setting['ropsten'].OverlayTokenAddress);
 
+  console.log(setting['ropsten'].privateKey);
+  const signer = ParentProvider.eth.accounts.privateKeyToAccount('0x' + setting['ropsten'].privateKey);
+  console.log(signer.address);
+
   var totalSupply = await OverlayToken.methods.totalSupply().call();
   var owner = await OverlayToken.methods.owner().call();
   console.log(`TotalSupply: ${totalSupply}`);
