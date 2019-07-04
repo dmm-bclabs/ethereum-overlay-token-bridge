@@ -1,0 +1,8 @@
+{
+  "ropsten":{
+    "url": "https://ropsten.infura.io",
+    "chainId": 3,
+    "OverlayTokenAddress": "0x0",
+    "privateKey": "SIGNER PRIVATE KEY HERE"
+  }
+}

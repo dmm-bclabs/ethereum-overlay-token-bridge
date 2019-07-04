@@ -1,0 +1,16 @@
+{
+  "name": "ethereum-overlay-token-bridge",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:team-crypto/ethereum-overlay-token-bridge.git",
+  "author": "Nagato Kasaki <kasaki-nagato@dmm.com>",
+  "license": "MIT",
+  "dependencies": {
+    "buffer": "^5.2.1",
+    "command-line-args": "^5.1.1",
+    "js-sha3": "^0.8.0",
+    "secp256k1": "^3.7.1",
+    "superagent": "^5.1.0",
+    "web3": "^1.0.0-beta.55"
+  }
+}
