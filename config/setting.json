@@ -2,7 +2,7 @@
   "ropsten":{
     "url": "wss://ropsten.infura.io/ws/v3/[YOUR PROJECT ID]",
     "chainId": 3,
-    "OverlayTokenAddress": "0xc2f3f9f2409485c2be988ebf8ef0c3ea10d3c964",
+    "OverlayTokenAddress": "0x81d13559938ef896e4da8c5c13b7d1f4ce1feb27",
     "privateKey": "SIGNER PRIVATE KEY HERE"
   }
 }
