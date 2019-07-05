@@ -6,6 +6,7 @@
   "author": "Nagato Kasaki <kasaki-nagato@dmm.com>",
   "license": "MIT",
   "dependencies": {
+    "@polkadot/api": "0.80.1",
     "buffer": "^5.2.1",
     "command-line-args": "^5.1.1",
     "js-sha3": "^0.8.0",
