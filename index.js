@@ -15,7 +15,8 @@ const customTypes = {
 };
 
 async function main () {
-  const child = 'ws://127.0.0.1:9944';
+
+  const child = process.env.CHILD || 'ws://127.0.0.1:9944';
   const childApi = await ApiPromise.create({
     provider: new WsProvider(child),
     types: customTypes
@@ -23,82 +24,77 @@ async function main () {
   // Constuct the keying after the API (crypto has an async init)
   const keyring = new Keyring({ type: 'sr25519' });
   // Add alice to our keyring with a hard-deived path (empty phrase, so uses dev)
-  const owner = keyring.addFromUri('//Alice');
+  const childSigner = keyring.addFromUri('//Alice');
   
-  let supplies = {
-    child: {
-      init: false,
-      totalSupply: 0,
-      localSupply: 0,
-      parentSupply: 0,
-    }
-  }
-
-  supplies.child.init = await childApi.query.token.init();
-  supplies.child.totalSupply = await childApi.query.token.totalSupply();
-  supplies.child.localSupply = await childApi.query.token.localSupply();
-  supplies.child.parentSupply = await childApi.query.token.parentSupply();
-  console.log(`init status on the child chain: ${supplies.child.init}`);
-  console.log(`totalSupply on the child chain: ${supplies.child.totalSupply}`);
-  console.log(`localSupply on the child chain: ${supplies.child.localSupply}`);
-  console.log(`parentSupply on the child chain: ${supplies.child.parentSupply}`);
-
   const ParentProvider = new Web3(new Web3.providers.WebsocketProvider(parent));
   const OverlayToken = await new ParentProvider.eth.Contract(overlayTokenABI, setting['ropsten'].OverlayTokenAddress);
 
   console.log(setting['ropsten'].privateKey);
-  const signer = ParentProvider.eth.accounts.privateKeyToAccount('0x' + setting['ropsten'].privateKey);
-  console.log(signer.address);
+  const parentSigner = ParentProvider.eth.accounts.privateKeyToAccount('0x' + setting['ropsten'].privateKey);
+  console.log(parentSigner.address);
 
   ParentProvider.eth.accounts.wallet.add(setting['ropsten'].privateKey)
-  ParentProvider.eth.defaultAccount = signer.address;
+  ParentProvider.eth.defaultAccount = parentSigner.address;
 
   var totalSupply = await OverlayToken.methods.totalSupply().call();
   console.log(`Parent TotalSupply: ${totalSupply}`);
 
   childApi.query.token.init(async (init) => {
-    supplies.child.init = init;
-    if (supplies.child.init.valueOf()) {
-      childApi.query.token.parentSupply(async (current) => {
-        let change = current.sub(supplies.child.parentSupply);
-        let local = await childApi.query.token.localSupply();
-        let localChange = local.sub(supplies.child.localSupply);
-        supplies.child.parentSupply = current;
-        supplies.child.localSupply = local;
-    
-        // Detect send token child to parent
-        if (!change.isZero() && !change.isNeg() && localChange.isNeg()) {
-          console.log(`New childSupply on the parent chain: ${current}`);
-          receiveFromChild(ParentProvider, OverlayToken, signer.address, change.toNumber());
-        }
-      })
+    if (init.valueOf()) {
+      syncTokenStatus(ParentProvider, OverlayToken, childApi, parentSigner, childSigner);
     }
   });
+}
 
-  OverlayToken.events.allEvents({fromBlock: 'latest'}, function(error, result) {
-    console.log('Watch event');
+function syncTokenStatus(parentApi, parentContract, childApi, parentSigner, childSigner) {
+  syncTokenStatus = function() {};
+  console.log("watch start");
+
+  // watch parent
+  parentContract.events.allEvents({fromBlock: 'latest'}, function(error, result) {
     if (!error) {
       switch(result.event) {
         case 'Mint':
           console.log('mint');
           console.log(result.returnValues.value.toNumber());
           // mint token
-          mintToken(childApi, owner, result.returnValues.value.toNumber());
+          mintToken(childApi, childSigner, result.returnValues.value.toNumber());
           break;
         case 'Burn':
           console.log('burn');
           console.log(result.returnValues.value.toNumber());
-          burnToken(childApi, owner, result.returnValues.value.toNumber());
+          burnToken(childApi, childSigner, result.returnValues.value.toNumber());
           break;
         case 'Send':
           console.log('send');
           console.log(result.returnValues.value.toNumber());
-          receiveFromParent(childApi, owner, result.returnValues.value.toNumber());
+          receiveFromParent(childApi, childSigner, result.returnValues.value.toNumber());
           break;
         default:
           break;
       }
     }
+  });
+
+  // watch child
+  childApi.query.system.events((events) => {
+    // loop through the Vec<EventRecord>
+    events.forEach((record) => {
+      // extract the phase, event and the event types
+      const { event, phase } = record;
+      const types = event.typeDef;
+
+      switch(`${event.section}:${event.method}`) {
+        case 'token:SentToParent':
+          console.log('Child: SentToParent');
+          console.log(`Address: ${event.data[0]}`);
+          console.log(`Amount: ${event.data[1]}`);
+          receiveFromChild(parentApi, parentContract, parentSigner.address, event.data[1].toNumber());
+          break;
+      default:
+        break;
+      }
+    });
   });
 }
 
@@ -140,7 +136,7 @@ async function receiveFromChild(web3, contract, address, value) {
       value: 0,
       data: data,
       gasLimit: web3.utils.toHex(60000),
-      gasPrice: web3.utils.toHex(20 * 100000000),
+      gasPrice: web3.utils.toHex(20 * 1000000000 /* Gwei */),
       nonce: nonce,
       chainId: setting['ropsten'].chainId
     },

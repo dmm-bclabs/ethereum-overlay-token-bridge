@@ -5,8 +5,12 @@
   "repository": "git@github.com:team-crypto/ethereum-overlay-token-bridge.git",
   "author": "Nagato Kasaki <kasaki-nagato@dmm.com>",
   "license": "MIT",
+  "scripts": {
+    "dev": "node index.js"
+  },
   "dependencies": {
-    "@polkadot/api": "0.80.1",
+    "@polkadot/api": "0.81.1",
+    "@polkadot/keyring": "^0.93.1",
     "buffer": "^5.2.1",
     "command-line-args": "^5.1.1",
     "js-sha3": "^0.8.0",
