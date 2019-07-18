@@ -4,8 +4,6 @@ const EthereumTx = require('ethereumjs-tx');
 const overlayTokenABI = require('./config/OverlayToken.json');
 const setting = require('./config/setting.json');
 
-const parent = setting['ropsten'].url;
-
 const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { Keyring } = require('@polkadot/keyring');
 
@@ -17,6 +15,9 @@ const customTypes = {
 async function main () {
 
   const child = process.env.CHILD || 'ws://127.0.0.1:9944';
+  const chain = process.env.CHAIN || 'ropsten';
+  const parent = setting[chain].url;
+
   const childApi = await ApiPromise.create({
     provider: new WsProvider(child),
     types: customTypes
@@ -27,13 +28,13 @@ async function main () {
   const childSigner = keyring.addFromUri('//Alice');
   
   const ParentProvider = new Web3(new Web3.providers.WebsocketProvider(parent));
-  const OverlayToken = await new ParentProvider.eth.Contract(overlayTokenABI, setting['ropsten'].OverlayTokenAddress);
+  const OverlayToken = await new ParentProvider.eth.Contract(overlayTokenABI, setting[chain].OverlayTokenAddress);
 
-  console.log(setting['ropsten'].privateKey);
-  const parentSigner = ParentProvider.eth.accounts.privateKeyToAccount('0x' + setting['ropsten'].privateKey);
+  console.log(setting[chain].privateKey);
+  const parentSigner = ParentProvider.eth.accounts.privateKeyToAccount('0x' + setting[chain].privateKey);
   console.log(parentSigner.address);
 
-  ParentProvider.eth.accounts.wallet.add(setting['ropsten'].privateKey)
+  ParentProvider.eth.accounts.wallet.add(setting[chain].privateKey)
   ParentProvider.eth.defaultAccount = parentSigner.address;
 
   var totalSupply = await OverlayToken.methods.totalSupply().call();
@@ -56,9 +57,10 @@ function syncTokenStatus(parentApi, parentContract, childApi, parentSigner, chil
       switch(result.event) {
         case 'Mint':
           console.log('mint');
+          console.log(result);
           console.log(result.returnValues.value.toNumber());
           // mint token
-          mintToken(childApi, childSigner, result.returnValues.value.toNumber());
+          // mintToken(childApi, childSigner, result.returnValues.value.toNumber());
           break;
         case 'Burn':
           console.log('burn');
@@ -132,15 +134,15 @@ async function receiveFromChild(web3, contract, address, value) {
     const nonce = await web3.eth.getTransactionCount(address, 'pending');
     console.log(nonce);
     const stx = await signTransaction({
-      to: setting['ropsten'].OverlayTokenAddress,
+      to: setting[chain].OverlayTokenAddress,
       value: 0,
       data: data,
       gasLimit: web3.utils.toHex(60000),
       gasPrice: web3.utils.toHex(20 * 1000000000 /* Gwei */),
       nonce: nonce,
-      chainId: setting['ropsten'].chainId
+      chainId: setting[chain].chainId
     },
-    setting['ropsten'].privateKey);
+    setting[chain].privateKey);
     console.log(stx);
     await web3.eth.sendSignedTransaction(stx, (err, hash) => {
       if (err) {

@@ -3,6 +3,24 @@
     "url": "wss://ropsten.infura.io/ws/v3/[YOUR PROJECT ID]",
     "chainId": 3,
     "OverlayTokenAddress": "0x81d13559938ef896e4da8c5c13b7d1f4ce1feb27",
-    "privateKey": "SIGNER PRIVATE KEY HERE"
+    "privateKey": "[SIGNER PRIVATE KEY]"
+  },
+  "rinkeby":{
+    "url": "wss://rinkeby.infura.io/ws/v3/[YOUR PROJECT ID]",
+    "chainId": 4,
+    "OverlayTokenAddress": "0x0",
+    "privateKey": "[SIGNER PRIVATE KEY]"
+  },
+  "goerli":{
+    "url": "wss://goerli.infura.io/ws/v3/[YOUR PROJECT ID]",
+    "chainId": 5,
+    "OverlayTokenAddress": "0x70f36e25d9cc6d813587ed106d28cd4195639a9c",
+    "privateKey": "[SIGNER PRIVATE KEY]"
+  },
+  "kovan":{
+    "url": "wss://kovan.infura.io/ws/v3/[YOUR PROJECT ID]",
+    "chainId": 42,
+    "OverlayTokenAddress": "0x0",
+    "privateKey": "[SIGNER PRIVATE KEY]"
   }
 }
