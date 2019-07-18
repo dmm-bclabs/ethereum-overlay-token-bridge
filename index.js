@@ -57,10 +57,9 @@ function syncTokenStatus(parentApi, parentContract, childApi, parentSigner, chil
       switch(result.event) {
         case 'Mint':
           console.log('mint');
-          console.log(result);
           console.log(result.returnValues.value.toNumber());
           // mint token
-          // mintToken(childApi, childSigner, result.returnValues.value.toNumber());
+          mintToken(childApi, childSigner, result.returnValues.value.toNumber());
           break;
         case 'Burn':
           console.log('burn');
