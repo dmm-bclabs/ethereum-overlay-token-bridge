@@ -1,7 +1,7 @@
 const Web3 = require('web3');
 const EthereumTx = require('ethereumjs-tx');
 const { AbstractMethodFactory } = require('web3-core-method');
-const {formatters} = require('web3-core-helpers');
+const { formatters } = require('web3-core-helpers');
 
 const overlayTokenABI = require('./config/OverlayToken.json');
 const setting = require('./config/setting.json');
@@ -38,6 +38,7 @@ async function main () {
 
   ParentProvider.eth.accounts.wallet.add(setting[chain].privateKey)
   ParentProvider.eth.defaultAccount = parentSigner.address;
+  ParentProvider.transactionConfirmationBlocks = 3;
 
   var totalSupply = await OverlayToken.methods.totalSupply().call();
   console.log(`Parent TotalSupply: ${totalSupply}`);
@@ -67,11 +68,14 @@ function syncTokenStatus(parentApi, parentContract, childApi, parentSigner, chil
           console.log(`  removed: ${result.removed}`);
           console.log('');
           if(typeof observers[result.transactionHash] == 'undefined' && !result.removed) {
-            observers[result.transactionHash] = (new AbstractMethodFactory(parentApi.utils, formatters)).createTransactionObserver(parentApi).observe(result.transactionHash).subscribe(
+            observers[result.transactionHash] = (new AbstractMethodFactory(parentApi.utils, formatters)).createTransactionObserver(parentApi);
+            observers[result.transactionHash].observe(result.transactionHash).subscribe(
               (transactionConfirmation) => {
-                console.log(`mint confirmed: ${transactionConfirmation.confirmations}`);
-               mintToken(childApi, childSigner, result.returnValues.value.toNumber());
-               observers[result.transactionHash].unsubscribe();
+                console.log(`Mint confirmed: ${transactionConfirmation.confirmations}`);
+                if (observers[result.transactionHash].isConfirmed()) {
+                    console.log('confirmed');
+                    mintToken(childApi, childSigner, result.returnValues.value.toNumber());
+                }
               }
             );
           }
@@ -83,11 +87,14 @@ function syncTokenStatus(parentApi, parentContract, childApi, parentSigner, chil
           console.log(`  removed: ${result.removed}`);
           console.log('');
           if(typeof observers[result.transactionHash] == 'undefined' && !result.removed) {
-            observers[result.transactionHash] = (new AbstractMethodFactory(parentApi.utils, formatters)).createTransactionObserver(parentApi).observe(result.transactionHash).subscribe(
+            observers[result.transactionHash] = (new AbstractMethodFactory(parentApi.utils, formatters)).createTransactionObserver(parentApi);
+            observers[result.transactionHash].observe(result.transactionHash).subscribe(
               (transactionConfirmation) => {
-                console.log(`burn confirmed: ${transactionConfirmation.confirmations}`);
-                burnToken(childApi, childSigner, result.returnValues.value.toNumber());
-                observers[result.transactionHash].unsubscribe();
+                console.log(`Burn confirmed: ${transactionConfirmation.confirmations}`);
+                if (observers[result.transactionHash].isConfirmed()) {
+                    console.log('confirmed');
+                    burnToken(childApi, childSigner, result.returnValues.value.toNumber());
+                }
               }
             );
           }
@@ -99,11 +106,14 @@ function syncTokenStatus(parentApi, parentContract, childApi, parentSigner, chil
           console.log(`  removed: ${result.removed}`);
           console.log('');
           if(typeof observers[result.transactionHash] == 'undefined' && !result.removed) {
-            observers[result.transactionHash] = (new AbstractMethodFactory(parentApi.utils, formatters)).createTransactionObserver(parentApi).observe(result.transactionHash).subscribe(
+            observers[result.transactionHash] = (new AbstractMethodFactory(parentApi.utils, formatters)).createTransactionObserver(parentApi);
+            observers[result.transactionHash].observe(result.transactionHash).subscribe(
               (transactionConfirmation) => {
-                console.log(`send confirmed: ${transactionConfirmation.confirmations}`);
-                receiveFromParent(childApi, childSigner, result.returnValues.value.toNumber());
-                observers[result.transactionHash].unsubscribe();
+                console.log(`Send confirmed: ${transactionConfirmation.confirmations}`);
+                if (observers[result.transactionHash].isConfirmed()) {
+                    console.log('confirmed');
+                    receiveFromParent(childApi, childSigner, result.returnValues.value.toNumber());
+                }
               }
             );
           }
