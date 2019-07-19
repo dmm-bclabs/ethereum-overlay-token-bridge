@@ -8,7 +8,7 @@
   "rinkeby":{
     "url": "wss://rinkeby.infura.io/ws/v3/[YOUR PROJECT ID]",
     "chainId": 4,
-    "OverlayTokenAddress": "0x0",
+    "OverlayTokenAddress": "0xfb100e006c6c633e86fde9103717be6125abd151",
     "privateKey": "[SIGNER PRIVATE KEY]"
   },
   "goerli":{
@@ -20,7 +20,7 @@
   "kovan":{
     "url": "wss://kovan.infura.io/ws/v3/[YOUR PROJECT ID]",
     "chainId": 42,
-    "OverlayTokenAddress": "0x0",
+    "OverlayTokenAddress": "0xfb100e006c6c633e86fde9103717be6125abd151",
     "privateKey": "[SIGNER PRIVATE KEY]"
   }
 }
